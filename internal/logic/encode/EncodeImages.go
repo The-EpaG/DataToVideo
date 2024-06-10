@@ -77,7 +77,7 @@ func getChunksFromFile(file *os.File, filename string, chunkSize uint64, verbose
 	return buffer, nil
 }
 
-func colorImage(image *image.RGBA, buffer []byte, width int, height int) *image.RGBA {
+func colorImage(image *image.RGBA, buffer []byte, width int) *image.RGBA {
 	for i := 0; i < len(buffer); i += 3 {
 		color := color.RGBA{buffer[i], buffer[i+1], buffer[i+2], 0xff}
 		x := (i / 3) % width
@@ -93,7 +93,7 @@ func createImage(index int, buffer []byte, output string, width int, height int)
 	var lowRight image.Point = image.Point{width, height}
 
 	image := image.NewRGBA(image.Rectangle{upLeft, lowRight})
-	image = colorImage(image, buffer, width, height)
+	image = colorImage(image, buffer, width)
 
 	photoPath := fmt.Sprintf("%s/%d.png", output, index)
 	photo, err := os.Create(photoPath)
