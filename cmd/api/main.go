@@ -1,12 +1,14 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"image"
 	"image/color"
 	"image/png"
 	"io"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/The-EpaG/DataToVideo/internal/classes"
@@ -16,13 +18,42 @@ import (
 var width int = 100
 var height int = 100
 
-var outputFolder string = "output"
+var outputParam string
+var inputParam string
+var encodeParam *bool
+var videoParam *bool
+var verboseParam *bool
+
 var waitGroup sync.WaitGroup = sync.WaitGroup{}
 
 var upLeft image.Point = image.Point{0, 0}
 var lowRight image.Point = image.Point{width, height}
 
-var filename string = "input/input.gif"
+func parseParam() error {
+	flag.StringVar(&outputParam, "o", "output", "the output")
+	flag.StringVar(&inputParam, "i", "input/input.gif", "the input file")
+	encodeParam = flag.Bool("e", false, "encode")
+	decodeParam := flag.Bool("d", false, "decode")
+	imageParam := flag.Bool("img", false, "to/from images")
+	videoParam = flag.Bool("vid", false, "to/from video")
+	verboseParam = flag.Bool("v", false, "verbose log")
+
+	flag.Parse()
+
+	if *encodeParam == *decodeParam {
+		return &errors.MethodError{}
+	}
+
+	if *imageParam == *videoParam {
+		return &errors.OutputTypeError{}
+	}
+
+	if outputParam == "" || inputParam == "" || strings.Compare(strings.ToLower(inputParam), strings.ToLower(outputParam)) == 0 {
+		return &errors.ParamError{}
+	}
+
+	return nil
+}
 
 func getChunkFromFile(file *os.File, chunkSize uint64) ([]byte, error) {
 	buffer := make([]byte, chunkSize)
@@ -52,18 +83,18 @@ func getChunksFromFile(file *os.File, filename string, chunkSize uint64) ([][]by
 	}
 
 	// TODO: just a blok of logs that will need to be removed
-	fmt.Println("header.Size:", header.Size)
-	fmt.Println("size of header:", header.HeaderSize)
-	fmt.Println("headerBytes:", header.ToBytes())
-	fmt.Println("size:", size)
-	fmt.Println("chunkSize:", chunkSize)
-	fmt.Println("numOfChunks:", numOfChunks)
+	if *verboseParam {
+		fmt.Println("header.Size:", header.Size)
+		fmt.Println("size of header:", header.HeaderSize)
+		fmt.Println("headerBytes:", header.ToBytes())
+		fmt.Println("size:", size)
+		fmt.Println("chunkSize:", chunkSize)
+		fmt.Println("numOfChunks:", numOfChunks)
+	}
 
-	// TODO: You have to add the header in the first chunk, please try to don't make it ugly :)
-
-	// First chunk has size of chunkSize - headerByteSize
 	buffer := make([][]byte, numOfChunks)
 
+	// First chunk has size of chunkSize - headerByteSize
 	chunk, err := getChunkFromFile(file, chunkSize-header.HeaderSize)
 	if err != nil && err != io.EOF {
 		return nil, err
@@ -102,7 +133,7 @@ func createImage(index int, buffer []byte) {
 	image := image.NewRGBA(image.Rectangle{upLeft, lowRight})
 	image = colorImage(image, buffer)
 
-	photoPath := fmt.Sprintf("%s/%d.png", outputFolder, index)
+	photoPath := fmt.Sprintf("%s/%d.png", outputParam, index)
 	photo, err := os.Create(photoPath)
 	if err != nil {
 		fmt.Println(err)
@@ -114,23 +145,21 @@ func createImage(index int, buffer []byte) {
 	waitGroup.Done()
 }
 
-func main() {
-	file, err := os.Open(filename)
+func encodeToImages() error {
+	file, err := os.Open(inputParam)
 
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 
-	chunks, err := getChunksFromFile(file, filename, uint64(width*height*3))
+	chunks, err := getChunksFromFile(file, inputParam, uint64(width*height*3))
 	file.Close()
 
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 
-	os.Mkdir(outputFolder, os.ModePerm)
+	os.Mkdir(outputParam, os.ModePerm)
 
 	for index, chunk := range chunks {
 		waitGroup.Add(1)
@@ -138,4 +167,53 @@ func main() {
 	}
 
 	waitGroup.Wait()
+
+	return nil
+}
+
+func decodeFromImages() error {
+	return &errors.NotImplementedError{}
+}
+
+func encode() error {
+	if *encodeParam {
+		err := encodeToImages()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	} else {
+		err := decodeFromImages()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
+	return nil
+}
+
+func decode() error {
+	return &errors.NotImplementedError{}
+}
+
+func main() {
+	err := parseParam()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	if *encodeParam {
+		err = encode()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	} else {
+		err = decode()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
 }
