@@ -8,7 +8,7 @@ type BufferTooSmallError struct {
 }
 
 func (err *BufferTooSmallError) Error() string {
-	message := "The Buffer is empty"
+	message := "The Buffer is too small"
 	if err.MinSize != 0 {
 		return fmt.Sprintf("%s - %d < %d", message, err.Size, err.MinSize)
 	}

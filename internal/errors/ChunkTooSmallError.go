@@ -10,5 +10,5 @@ type ChunkTooSmallError struct {
 }
 
 func (err *ChunkTooSmallError) Error() string {
-	return fmt.Sprintf("The header is bigger then the chunk size - %d < %d", err.Size, err.MinSize)
+	return fmt.Sprintf("The chunk is too small - %d < %d", err.Size, err.MinSize)
 }
