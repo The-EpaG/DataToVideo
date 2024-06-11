@@ -1,4 +1,4 @@
-package classes
+package header
 
 import (
 	"encoding/binary"
@@ -38,7 +38,7 @@ func (header *Header) ToBytes() []byte {
 	return headerBytes
 }
 
-func HeaderFromBytes(buffer []byte) (*Header, error) {
+func FromBytes(buffer []byte) (*Header, error) {
 	if len(buffer) == 0 {
 		return nil, &errors.EmptyBufferError{}
 	}
@@ -57,7 +57,7 @@ func HeaderFromBytes(buffer []byte) (*Header, error) {
 	return &header, nil
 }
 
-func NewHeader(file *os.File, filename string) (*Header, error) {
+func New(file *os.File, filename string) (*Header, error) {
 	var header Header = Header{0, 0, filename}
 
 	fi, err := file.Stat()
