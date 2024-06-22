@@ -6,10 +6,9 @@ import (
 	"strings"
 	"os"
 
-
 	"github.com/The-EpaG/DataToVideo/internal/errors"
-	"github.com/The-EpaG/DataToVideo/internal/logic/decode"
-	"github.com/The-EpaG/DataToVideo/internal/logic/encode"
+	"github.com/The-EpaG/DataToVideo/cmd/decode"
+	"github.com/The-EpaG/DataToVideo/cmd/encode"
 )
 
 var outputParam string

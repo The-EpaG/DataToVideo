@@ -8,7 +8,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/The-EpaG/DataToVideo/internal/helper/files"
+	"github.com/The-EpaG/DataToVideo/internal/libs/files"
 )
 
 var waitGroup sync.WaitGroup = sync.WaitGroup{}
